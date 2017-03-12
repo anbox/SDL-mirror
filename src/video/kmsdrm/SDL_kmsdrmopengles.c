@@ -97,17 +97,15 @@ KMSDRM_GLES_SwapWindow(_THIS, SDL_Window * window) {
     }
 
     fb_info = KMSDRM_FBFromBO(_this, wdata->locked_bo);
-    if (!wdata->mode_set || _this->egl_data->egl_swapinterval == 0) {
+    if (_this->egl_data->egl_swapinterval == 0) {
         /* Swap buffers instantly, possible tearing */
         /* SDL_LogDebug(SDL_LOG_CATEGORY_VIDEO, "drmModeSetCrtc(%d, %u, %u, 0, 0, &%u, 1, &%ux%u@%u)",
             vdata->drm_fd, displaydata->crtc_id, fb_info->fb_id, vdata->saved_conn_id,
             displaydata->cur_mode.hdisplay, displaydata->cur_mode.vdisplay, displaydata->cur_mode.vrefresh); */
         ret = KMSDRM_drmModeSetCrtc(vdata->drm_fd, displaydata->crtc_id, fb_info->fb_id,
-                                    0, 0, &displaydata->connector_id, 1, &displaydata->cur_mode);
+                                    0, 0, &vdata->saved_conn_id, 1, &displaydata->cur_mode);
         if(ret != 0) {
             SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Could not pageflip with drmModeSetCrtc: %d", ret);
-        } else {
-            wdata->mode_set = SDL_TRUE;
         }
     } else {
         /* Queue page flip at vsync */

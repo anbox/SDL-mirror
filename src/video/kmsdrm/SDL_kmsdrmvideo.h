@@ -33,15 +33,6 @@
 #include <EGL/egl.h>
 #endif
 
-typedef struct SDL_DisplayData
-{
-    struct SDL_DisplayData *next;
-    uint32_t connector_id;
-    uint32_t crtc_id;
-    drmModeModeInfo cur_mode;
-    drmModeCrtc *saved_crtc;    /* Saved CRTC to restore on quit */
-} SDL_DisplayData;
-
 typedef struct SDL_VideoData
 {
     int devindex;               /* device index that was passed on creation */
@@ -49,14 +40,23 @@ typedef struct SDL_VideoData
     struct gbm_device *gbm;
     drmEventContext drm_evctx;  /* DRM event context */
     struct pollfd drm_pollfd;   /* pollfd containing DRM file desc */
-    SDL_DisplayData *disp_list; /* linked list of displays*/
+    drmModeCrtc *saved_crtc;    /* Saved CRTC to restore on quit */
+    uint32_t saved_conn_id;     /* Saved DRM connector ID */
 } SDL_VideoData;
+
+
+typedef struct SDL_DisplayData
+{
+    uint32_t encoder_id;
+    uint32_t crtc_id;
+    drmModeModeInfo cur_mode;
+} SDL_DisplayData;
+
 
 typedef struct SDL_WindowData
 {
     struct gbm_surface *gs;
     struct gbm_bo *locked_bo;
-    SDL_bool mode_set;
     SDL_bool waiting_for_flip;
 #if SDL_VIDEO_OPENGL_EGL
     EGLSurface egl_surface;
