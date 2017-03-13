@@ -2986,7 +2986,7 @@ case "$host" in
         CheckSNDIO
         CheckX11
         CheckKMSDRM
-	CheckDirectFB
+        CheckDirectFB
         CheckFusionSound
         CheckOpenGLX11
         CheckOpenGLESX11
