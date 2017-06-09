@@ -106,7 +106,7 @@ typedef struct ANativeWindow ANativeWindow;
 typedef void *EGLSurface;
 #endif
 
-#if defined(SDL_VIDEO_DRIVER_VIVANTE)
+#if defined(SDL_VIDEO_DRIVER_VIVANTE) || defined(SDL_VIDEO_DRIVER_KMSDRM)
 #include "SDL_egl.h"
 #endif
 
@@ -125,7 +125,8 @@ typedef enum
     SDL_SYSWM_MIR,
     SDL_SYSWM_WINRT,
     SDL_SYSWM_ANDROID,
-    SDL_SYSWM_VIVANTE
+    SDL_SYSWM_VIVANTE,
+    SDL_SYSWM_KMSDRM
 } SDL_SYSWM_TYPE;
 
 /**
@@ -278,6 +279,14 @@ struct SDL_SysWMinfo
             EGLNativeDisplayType display;
             EGLNativeWindowType window;
         } vivante;
+#endif
+
+#if defined(SDL_VIDEO_DRIVER_KMSDRM)
+        struct
+        {
+            EGLNativeDisplayType display;
+            EGLNativeWindowType window;
+        } kmsdrm;
 #endif
 
         /* Can't have an empty union */

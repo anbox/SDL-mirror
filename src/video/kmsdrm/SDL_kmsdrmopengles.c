@@ -59,7 +59,7 @@ int KMSDRM_GLES_SetSwapInterval(_THIS, int interval) {
     return 0;
 }
 
-void
+int
 KMSDRM_GLES_SwapWindow(_THIS, SDL_Window * window) {
     SDL_WindowData *wdata = ((SDL_WindowData *) window->driverdata);
     SDL_DisplayData *displaydata = (SDL_DisplayData *) SDL_GetDisplayForWindow(window)->driverdata;
@@ -73,7 +73,7 @@ KMSDRM_GLES_SwapWindow(_THIS, SDL_Window * window) {
         timeout = -1;
     }
     if (!KMSDRM_WaitPageFlip(_this, wdata, timeout)) {
-        return;
+        return SDL_EGL_SetError("Unable to wait for page flip", "KMSDRM_WaitPageFlip");
     }
 
     /* Release previously displayed buffer (which is now the backbuffer) and lock a new one */
@@ -84,14 +84,12 @@ KMSDRM_GLES_SwapWindow(_THIS, SDL_Window * window) {
     }
 
     if (!(_this->egl_data->eglSwapBuffers(_this->egl_data->egl_display, wdata->egl_surface))) {
-        SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "eglSwapBuffers failed.");
-        return;
+        return SDL_EGL_SetError("Failed to swap buffers", "eglSwapBuffers");
     }
 
     wdata->locked_bo = KMSDRM_gbm_surface_lock_front_buffer(wdata->gs);
     if (wdata->locked_bo == NULL) {
-        SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Could not lock GBM surface front buffer");
-        return;
+        return SDL_EGL_SetError("Could not lock GBM surface front buffer", "KMSDRM_gbm_surface_lock_front_buffer");
     /* } else {
         SDL_LogDebug(SDL_LOG_CATEGORY_VIDEO, "Locked GBM surface %p", (void *)wdata->locked_bo); */
     }
@@ -119,6 +117,8 @@ KMSDRM_GLES_SwapWindow(_THIS, SDL_Window * window) {
             SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Could not queue pageflip: %d", ret);
         }
     }
+
+    return 0;
 }
 
 SDL_EGL_MakeCurrent_impl(KMSDRM)

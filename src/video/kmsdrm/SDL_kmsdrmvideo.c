@@ -474,7 +474,6 @@ KMSDRM_CreateWindow(_THIS, SDL_Window * window)
     SDL_WindowData *wdata;
     SDL_VideoDisplay *display;
     SDL_VideoData *vdata = ((SDL_VideoData *)_this->driverdata);
-    SDL_DisplayData *displaydata;
 
     /* Allocate window internal data */
     wdata = (SDL_WindowData *) SDL_calloc(1, sizeof(SDL_WindowData));
@@ -484,7 +483,6 @@ KMSDRM_CreateWindow(_THIS, SDL_Window * window)
 
     wdata->waiting_for_flip = SDL_FALSE;
     display = SDL_GetDisplayForWindow(window);
-    displaydata = ((SDL_DisplayData *)display->driverdata);
 
     /* Windows have one size for now */
     window->w = display->desktop_mode.w;
@@ -617,15 +615,22 @@ KMSDRM_SetWindowGrab(_THIS, SDL_Window * window, SDL_bool grabbed)
 SDL_bool
 KMSDRM_GetWindowWMInfo(_THIS, SDL_Window * window, struct SDL_SysWMinfo *info)
 {
-    if (info->version.major <= SDL_MAJOR_VERSION) {
+    if (info->version.major == SDL_MAJOR_VERSION &&
+        info->version.minor == SDL_MINOR_VERSION) {
+
+        SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
+        SDL_VideoData *vdata = (SDL_VideoData *) _this->driverdata;
+
+        info->subsystem = SDL_SYSWM_KMSDRM;
+        info->info.kmsdrm.display = (EGLNativeDisplayType) vdata->gbm;
+        info->info.kmsdrm.window = (EGLNativeWindowType) data->gs;
+
         return SDL_TRUE;
-    } else {
-        SDL_SetError("application not compiled with SDL %d.%d\n",
-                     SDL_MAJOR_VERSION, SDL_MINOR_VERSION);
-        return SDL_FALSE;
     }
 
-    /* Failed to get window manager information */
+    SDL_SetError("Application not compiled with SDL %d.%d",
+                 SDL_MAJOR_VERSION, SDL_MINOR_VERSION);
+
     return SDL_FALSE;
 }
 
