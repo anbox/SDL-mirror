@@ -488,23 +488,25 @@ KMSDRM_CreateWindow(_THIS, SDL_Window * window)
     window->w = display->desktop_mode.w;
     window->h = display->desktop_mode.h;
 
-    /* Maybe you didn't ask for a fullscreen OpenGL window, but that's what you get */
-    window->flags |= (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_OPENGL);
+    /* Maybe you didn't ask for a fullscreen window, but that's what you get */
+    window->flags |= SDL_WINDOW_FULLSCREEN;
 
     wdata->gs = KMSDRM_gbm_surface_create(vdata->gbm, window->w, window->h, GBM_BO_FORMAT_XRGB8888,
                                           GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
 
 #if SDL_VIDEO_OPENGL_EGL
-    if (!_this->egl_data) {
-        if (SDL_GL_LoadLibrary(NULL) < 0) {
+    if (window->flags & SDL_WINDOW_OPENGL) {
+        if (!_this->egl_data) {
+            if (SDL_GL_LoadLibrary(NULL) < 0) {
+                goto error;
+            }
+        }
+        wdata->egl_surface = SDL_EGL_CreateSurface(_this, (NativeWindowType) wdata->gs);
+
+        if (wdata->egl_surface == EGL_NO_SURFACE) {
+            SDL_SetError("Could not create EGL window surface");
             goto error;
         }
-    }
-    wdata->egl_surface = SDL_EGL_CreateSurface(_this, (NativeWindowType) wdata->gs);
-
-    if (wdata->egl_surface == EGL_NO_SURFACE) {
-        SDL_SetError("Could not create EGL window surface");
-        goto error;
     }
 #endif /* SDL_VIDEO_OPENGL_EGL */
 
